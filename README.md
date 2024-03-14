@@ -27,7 +27,7 @@ $ python -m venv .platodebs
 ```sh
 $ source .platodebs/bin/activate
 ```
-You can then use pip to install the follow packages
+You can then use pip to install the following list of packages;
 ```
 numpy
 scipy
@@ -39,17 +39,21 @@ arviz
 corner
 
 lightkurve
+ipykernel
+ipympl
+jupyter
+
 git+https://github.com/LucIJspeert/star_shadow@1.1.7b
 ```
-or create a requirements.txt file, copy the list in and then run 
+or create a requirements.txt file, copy the list into it and then run;
 ```sh
 $ pip install -r requirements.txt
 ```
 
 #### First run to test the environment and JIT STAR SHADOW
 In either case, having set up and activated the environment, run the following
-which acts as a test of the environment and will get numba to JIT the
-STAR SHADOW code.
+which acts as a test of the environment and will get numba to do its JIT magic
+on the STAR SHADOW code;
 ```sh
 $ python run_first_use.py
 ```

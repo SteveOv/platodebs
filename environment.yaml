@@ -24,10 +24,14 @@ dependencies:
 
   - lightkurve
 
-  - pip
+  # For jupyter notebook support
+  - ipykernel
+  - ipympl
+  - jupyter
+
+  - pip>=24.0
   - pip:
-    # Install star_shadow
-    - git+https://github.com/LucIJspeert/star_shadow@08ec10e
+    - git+https://github.com/LucIJspeert/star_shadow@1.1.7b
 
 variables:
 
