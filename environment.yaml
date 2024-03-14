@@ -1,0 +1,33 @@
+name: platodebs
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.7
+  - arviz=0.11.4
+  - astropy=4.3.1
+  - astroquery=0.4.1
+  - attrs=22.1.0
+  - corner==2.2.1
+  - ellc=1.8.5
+  - fastprogress=1.0.0
+  - h5py=3.7.0
+  - hdf4=4.2.15
+  - hdf5=1.12.2
+  - matplotlib=3.5.3
+  - numba=0.55.1
+  - numpy=1.20.3
+  - pandas=1.2.3
+  - pymc3=3.11.4
+  - scipy=1.7.3
+  - theano-pymc=1.1.2
+
+  - lightkurve
+
+  - pip
+  - pip:
+    # Install star_shadow
+    - git+https://github.com/LucIJspeert/star_shadow@08ec10e
+
+variables:
+
