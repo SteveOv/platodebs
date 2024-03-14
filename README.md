@@ -10,7 +10,7 @@ libraries upon which the code is dependent.
 To set up the **platodebs** environment, having first cloned the GitHub repo, 
 open a Terminal, navigate to this directory and run the following command;
 ```sh
-$ conda env create -f environment.yml
+$ conda env create -f environment.yaml
 ```
 
 You will need to activate the **platodebs** environment whenever you wish to
