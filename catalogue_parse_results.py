@@ -81,7 +81,9 @@ for target_ix, (target, target_row) in enumerate(input_df.iterrows(), start=1):
             sector = lc.meta["SECTOR"]
             print(f"Sector {sector:03d}...", end="")
 
-            fig, axes = plt.subplots(2, 1, sharex="all", figsize=(10, 6), constrained_layout=True)
+            gridspec_kw = { "height_ratios": [4, 4, 2] }
+            fig, axes = plt.subplots(3, 1, sharex="all", figsize=(8, 6), 
+                                     gridspec_kw=gridspec_kw, constrained_layout=True)
             axes = axes.flatten()
             fig.suptitle(f"{lc.meta['OBJECT']} sector {sector:03d}")
 
@@ -90,7 +92,7 @@ for target_ix, (target, target_row) in enumerate(input_df.iterrows(), start=1):
             lc = lc.normalize()
 
             # We can plot the raw LC in the upper ax
-            lc.scatter(ax=axes[0], label=flux_column)
+            lc.scatter(ax=axes[0], label=None)
             axes[0].set_xlabel(None)
 
             # Work out the eclipse mask for this sector
@@ -109,9 +111,14 @@ for target_ix, (target, target_row) in enumerate(input_df.iterrows(), start=1):
             print("flattening...", end="")
             flat_lc = lc.flatten(mask=transit_mask)
             flat_lc.scatter(ax=axes[1], label=None)
+            axes[1].set_xlabel(None)
+
+            res_lc = lc - flat_lc
+            res_lc.scatter(ax=axes[2], label=None)
+            axes[2].set_ylabel("Difference")
 
             print(f"saving plots...", end="")
-            plt.savefig(plots_dir / f"{target}_{sector:03d}.png", dpi=300)
+            plt.savefig(plots_dir / f"{target}_{sector:03d}.png", dpi=100)
             plt.close()
             print("done.")
 
