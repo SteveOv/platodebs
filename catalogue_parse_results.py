@@ -121,6 +121,3 @@ for target_ix, (target, target_row) in enumerate(input_df.iterrows(), start=1):
             plt.savefig(plots_dir / f"{target}_{sector:03d}.png", dpi=100)
             plt.close()
             print("done.")
-
-# Save the ebs dataset to a new file
-input_df.to_csv(catalogue_dir / "tessebs_extra_eclipses.csv", sep=",")
