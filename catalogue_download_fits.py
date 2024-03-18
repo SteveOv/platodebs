@@ -7,6 +7,7 @@ import lightkurve as lk
 
 # Basic params - may convert to args
 input_file = Path(".") / "tessebs_extra.csv"
+chosen_target = None
 overwrite = False
 flux_column = "pdcsap_flux"
 
@@ -14,14 +15,20 @@ catalogue_dir = Path(".") / "catalogue"
 catalogue_dir.mkdir(parents=True, exist_ok=True)
 empty_targets = []
 
-
+# Optionally filter the targets to a single system
 input_df = pd.read_csv(input_file, index_col="Star")
 #ebs_df.sort_values(by="Priority", inplace=True)
-for target_ix, (target, target_row) in enumerate(input_df.iterrows(), start=1):
+targets = input_df.iterrows()
+count_targs = len(input_df)
+if chosen_target: 
+    targets = [(targ, row) for targ, row in targets if targ == chosen_target]
+    count_targs = len(targets)
+
+for target_ix, (target, target_row) in enumerate(targets, start=1):
     tic = target_row["TIC"]
     print()
     print("---------------------------------------------")
-    print(f"Processing target ({target_ix}/{len(input_df)}): {target}")
+    print(f"Processing target ({target_ix}/{count_targs}): {target}")
     print("---------------------------------------------")
 
     download_dir = catalogue_dir / f"download/{tic:010d}/"
