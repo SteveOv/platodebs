@@ -11,7 +11,6 @@ from uncertainties import ufloat
 
 # Basic params - may convert to args
 input_file = Path(".") / "tessebs_extra.csv"
-overwrite = False
 flux_column = "pdcsap_flux"
 
 catalogue_dir = Path(".") / "catalogue"
