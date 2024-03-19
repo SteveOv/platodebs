@@ -13,13 +13,17 @@ from utility import flatten_lightcurve, plot_lightcurves_and_mask
 
 # Basic params - may convert to args
 input_file = Path(".") / "tessebs_extra.csv"
+target_filter = []      # list of index (Star) values to filter the input to
 flux_column = "pdcsap_flux"
+quality_bitmask = "hardest"
 
 catalogue_dir = Path(".") / "catalogue"
 analysis_dir = catalogue_dir / "analysis"
 analysis_dir.mkdir(parents=True, exist_ok=True)
 
-for counter, (target, target_row, count_rows) in enumerate(iterate_targets(input_file), start=1):
+for counter, (target, target_row, count_rows) in enumerate(
+        iterate_targets(input_file, filter=target_filter),
+        start=1):
     tic = target_row["TIC"]
     print()
     print("---------------------------------------------")
@@ -41,7 +45,9 @@ for counter, (target, target_row, count_rows) in enumerate(iterate_targets(input
         plots_dir.mkdir(parents=True, exist_ok=True)
 
         fits = sorted(target_dir.rglob("**/*.fits"))
-        lcs = lk.LightCurveCollection([lk.read(f"{f}", flux_column=flux_column) for f in fits])
+        lcs = lk.LightCurveCollection([
+            lk.read(f"{f}", flux_column=flux_column, quality_bitmask=quality_bitmask)
+                for f in fits])
         print(f"Loaded {len(lcs)} light curve fits file(s) for {target}.")
 
         for lc in lcs:
