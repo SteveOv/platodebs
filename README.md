@@ -140,7 +140,7 @@ $ python process_results.py ./tessebs_extra.csv
 ```
 This supports the following optional command line arguments:
 - the optional first argument is the input csv file holding the target data. 
-Must have Star and Period columns
+Must have Star and Period columns. Defaults to ./tessebs_extra.csv
 - `-t`/`--targets`: an optional list of target Star value to filter the input csv on
 - `-fc`/`--flux-column`: the flux column to read. Wither sap_flux or pdcsap_flux (default)
 - `-qb`/`--quality-bitmask`: optional quality bitmask with which to filter observations
