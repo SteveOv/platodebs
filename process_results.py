@@ -17,6 +17,7 @@ input_file = Path(".") / "tessebs_extra.csv"
 target_filter = []      # list of index (Star) values to filter the input to
 flux_column = "pdcsap_flux"
 quality_bitmask = "hardest"
+save_plots = False
 
 catalogue_dir = Path(".") / "catalogue"
 analysis_dir = catalogue_dir / "analysis"
@@ -56,14 +57,16 @@ for counter, (target, target_row, count_rows) in enumerate(
             print(f"Sector {sector:03d}...", end="")
 
             # Process the light curve
+            print("processing the lightcurves...", end="")
             lc = lc.normalize()
             flat_lc, res_lc, ecl_mask = flatten_lightcurve(lc, ecl_times, ecl_durs, period)
 
             # Plots
-            print("saving plots...", end="")
-            title = f"{lc.meta['OBJECT']} sector {sector:03d}"
-            fig, _ = plot_lightcurves_and_mask(lc, flat_lc, res_lc, ecl_mask, (8, 6), title)
-            fig.savefig(plots_dir / f"{target}_{sector:03d}.png", dpi=100)
-            plt.close(fig)
+            if save_plots:
+                print("saving plots...", end="")
+                title = f"{lc.meta['OBJECT']} sector {sector:03d}"
+                fig, _ = plot_lightcurves_and_mask(lc, flat_lc, res_lc, ecl_mask, (8, 6), title)
+                fig.savefig(plots_dir / f"{target}_{sector:03d}.png", dpi=100)
+                plt.close(fig)
 
             print("done.")

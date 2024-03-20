@@ -144,6 +144,7 @@ input_file = Path(".") / "tessebs_extra.csv"
 target_filter = []      # list of index (Star) values to filter the input to
 flux_column = "pdcsap_flux"
 quality_bitmask = "hardest"
+save_plots = False
 ```
 For each target, where an analysis summary is found, the following is carried out:
 1. The analysis summary is parsed for period, eclipse timing and eclipse duration data
@@ -154,7 +155,7 @@ For each target, where an analysis summary is found, the following is carried ou
         - See [Lightkurve: flatten()](http://docs.lightkurve.org/reference/api/lightkurve.LightCurve.flatten.html)
     4. the flattened lightcurve is subtracted from the normalized one to find the residual variability
     5. **TODO**: a variability metric is calculated
-    6. the three lightcurves and the eclipse mask are plotted
+    6. optionally, the three lightcurves and the eclipse mask are plotted to a single figure
         - these are saved to `./catalogue/plots/TIC{tic}/TIC_{tic}_{sector}.png`
 
 There is also a convenience jupyter notebook, `process_target_results.ipynb`, which replicates
