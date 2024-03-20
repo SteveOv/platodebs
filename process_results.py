@@ -12,6 +12,7 @@ from utility import echo_analysis_log, parse_analysis_for_eclipses
 from utility import flatten_lightcurve, plot_lightcurves_and_mask
 
 # Basic params - may convert to args
+# pylint: disable=invalid-name
 input_file = Path(".") / "tessebs_extra.csv"
 target_filter = []      # list of index (Star) values to filter the input to
 flux_column = "pdcsap_flux"
@@ -22,7 +23,7 @@ analysis_dir = catalogue_dir / "analysis"
 analysis_dir.mkdir(parents=True, exist_ok=True)
 
 for counter, (target, target_row, count_rows) in enumerate(
-        iterate_targets(input_file, filter=target_filter),
+        iterate_targets(input_file, index_filter=target_filter),
         start=1):
     tic = target_row["TIC"]
     print()
@@ -38,7 +39,7 @@ for counter, (target, target_row, count_rows) in enumerate(
         echo_analysis_log(analysis_csv.parent / f"{tic}.log")
         (t0, period, ecl_times, ecl_durs) = parse_analysis_for_eclipses(analysis_csv)
 
-        # Now we can process each LC for this target            
+        # Now we can process each LC for this target
         target_dir = catalogue_dir / f"download/{tic:010d}/"
         target_json = target_dir / "target.json"
         plots_dir = catalogue_dir / "plots" / f"{target}"
@@ -59,7 +60,7 @@ for counter, (target, target_row, count_rows) in enumerate(
             flat_lc, res_lc, ecl_mask = flatten_lightcurve(lc, ecl_times, ecl_durs, period)
 
             # Plots
-            print(f"saving plots...", end="")
+            print("saving plots...", end="")
             title = f"{lc.meta['OBJECT']} sector {sector:03d}"
             fig, _ = plot_lightcurves_and_mask(lc, flat_lc, res_lc, ecl_mask, (8, 6), title)
             fig.savefig(plots_dir / f"{target}_{sector:03d}.png", dpi=100)

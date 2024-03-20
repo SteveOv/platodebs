@@ -1,3 +1,4 @@
+""" Helper functions for the platodebs project. """
 from typing import List, Tuple, Union
 from pathlib import Path
 
@@ -12,7 +13,7 @@ from lightkurve import LightCurve
 
 def iterate_targets(input_csv: Path,
                     index_col: str="Star",
-                    filter: List[str]=None,
+                    index_filter: List[str]=None,
                     sort_by: str=None,
                     nan_to_none: bool=True):
     """
@@ -23,7 +24,7 @@ def iterate_targets(input_csv: Path,
 
     :input_csv: the input csv file
     :index_col: the name of the csv column to index on
-    :filter: optional list of index values to filter results by (unfiltered if empty)
+    :index_filter: optional list of index values to filter results by (unfiltered if empty)
     :sort_by: optional sort column; prefix with + or - for asc/descending sort
     :nan_to_none: whether to substitute None for NaN values
     :returns: yields a tuple of the index value, row dict and total row count
@@ -32,9 +33,9 @@ def iterate_targets(input_csv: Path,
     if nan_to_none:
         input_df.replace({ np.nan: None }, inplace=True)
 
-    if filter and len(filter) > 0:
-        input_df = input_df[input_df.index.isin(filter)]
-    
+    if index_filter and len(index_filter) > 0:
+        input_df = input_df[input_df.index.isin(index_filter)]
+
     if sort_by:
         if sort_by.startswith("-"):
             sort_by = sort_by.strip("-")
@@ -101,8 +102,8 @@ def parse_analysis_for_eclipses(analysis_csv: Path,
         print(f"From {analysis_csv.name}")
         print(f"Reference time:              {t0:.6f}")
         print(f"Orbital period:              {period:.6f}")
-        print(f"Eclipse times:              ", ", ".join(f"{t:.6f}" for t in eclipse_times))
-        print(f"Eclipse durations:          ", ", ".join(f"{t:.6f}" for t in eclipse_durations))
+        print( "Eclipse times:              ", ", ".join(f"{t:.6f}" for t in eclipse_times))
+        print( "Eclipse durations:          ", ", ".join(f"{t:.6f}" for t in eclipse_durations))
         if duration_scale != 1.:
             print(f"Eclipse durations scaled by: {duration_scale}")
         if any(t.nominal_value == 0 for t in eclipse_durations):
@@ -148,9 +149,9 @@ def flatten_lightcurve(lc: LightCurve,
     eclipse_mask = lc.create_transit_mask(
         transit_time=[t.nominal_value for t in eclipse_times],
         duration=[t.nominal_value for t in eclipse_durations],
-        period=[orbital_period.nominal_value, orbital_period.nominal_value])   
-            
-    # Flatten the source lc, except the masked time regions, then find the difference 
+        period=[orbital_period.nominal_value, orbital_period.nominal_value])
+
+    # Flatten the source lc, except the masked time regions, then find the difference
     flat_lc = lc.flatten(mask=eclipse_mask)
     res_lc = lc - flat_lc
 
@@ -176,8 +177,9 @@ def plot_lightcurves_and_mask(lc: LightCurve,
     :suptitle: optional suptitle to give the whole figure
     :returns: a tuple containing the new (figure, axes)
     """
+    # pylint: disable=too-many-arguments
     gridspec_kw = { "height_ratios": [4, 4, 2] }
-    fig, axes = plt.subplots(3, 1, sharex="all", figsize=fig_size, 
+    fig, axes = plt.subplots(3, 1, sharex="all", figsize=fig_size,
                              gridspec_kw=gridspec_kw, constrained_layout=True)
     if suptitle:
         fig.suptitle(suptitle)
@@ -195,7 +197,7 @@ def plot_lightcurves_and_mask(lc: LightCurve,
 
     # The eclipse masks will be highlighted on all axes. To do this we need
     # the start/end times of each mask. It's a bit tortuous so to doc the algo;
-    # clump_masked gets us slices oover each contiguous region of the masked 
+    # clump_masked gets us slices oover each contiguous region of the masked
     # data then the slices' start/stop can be used as indices to the values.
     mask_slices = np.ma.clump_masked(np.ma.masked_where(eclipse_mask, lc.time.value))
     transform = axes[0].get_xaxis_transform()

@@ -28,7 +28,7 @@ def analyse_target(counter: int,
                    target: str,
                    target_row: dict,
                    total_rows: int,
-                   overwrite: bool=False) -> None:
+                   overwrite_analysis: bool=False) -> None:
     """
     Performs full STAR_SHADOW analysis on a single target system.
 
@@ -36,7 +36,7 @@ def analyse_target(counter: int,
     :target: the name of the target
     :target_row: the input data associated with the target
     :total_rows: total number of targets being processed (for messages)
-    :overwrite: whether to force the analysis to overwrite previous results
+    :overwrite_analysis: whether to force the analysis to overwrite previous results
     """
     tic = target_row["TIC"]
     period = target_row["Period"]
@@ -54,7 +54,7 @@ def analyse_target(counter: int,
     # Use the existance of the output/analysis*/*_analysis_summary.csv as a lock
     # Note: STAR_SHADOW uses the numeric TIC without leading zeros in dir/file names.
     analysis_csv = analysis_dir / f"{tic}_analysis" / f"{tic}_analysis_summary.csv"
-    if not overwrite and analysis_csv.exists():
+    if not overwrite_analysis and analysis_csv.exists():
         # sts won't restart a completed analysis unless overwrite=True so this
         # check isn't entirely necessary but it does make the console log clearer.
         print(f"{target}: Found analysis summary csv '{analysis_csv}'. Skipping to next target.")
@@ -89,7 +89,7 @@ def analyse_target(counter: int,
                                 method='fitter',
                                 data_id=target,
                                 save_dir=f"{analysis_dir}",
-                                overwrite=overwrite,
+                                overwrite=overwrite_analysis,
                                 verbose=True)
 
     # TODO: a summary of the eclipse data, from analysis log & csv, or a failure message
@@ -100,6 +100,7 @@ def analyse_target(counter: int,
 # -------------------------------------------
 if __name__ == "__main__":
     # Basic params - may convert to args
+    # pylint: disable=invalid-name
     input_file = Path(".") / "tessebs_extra.csv"
     target_filter = []      # list of index (Star) values to filter the input to
     overwrite = False
@@ -109,7 +110,7 @@ if __name__ == "__main__":
     # in the form [(1, targ1, row1, total, ow), (2, targ2, row2, total, ow), ...]
     iter_prms = (
         (i, targ, row, tot, overwrite) for i, (targ, row, tot) in enumerate(
-            iterate_targets(input_file, filter=target_filter),
+            iterate_targets(input_file, index_filter=target_filter),
             start=1)
     )
 
