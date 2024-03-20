@@ -87,21 +87,28 @@ def parse_analysis_for_eclipses(analysis_csv: Path,
 
     t0 = read_analysis_value(smry, "t_mean")
     period = read_analysis_value(smry, "period", "p_err")
+    eclipse_times = []
+    eclipse_durations = []
 
-    eclipse_times = [
-        (t0 + read_analysis_value(smry, "t_1")),
-        (t0 + read_analysis_value(smry, "t_2"))
-    ]
-
-    eclipse_durations = [
-        (read_analysis_value(smry, "t_1_2") - read_analysis_value(smry, "t_1_1")) * duration_scale,
-        (read_analysis_value(smry, "t_2_2") - read_analysis_value(smry, "t_2_1")) * duration_scale
-    ]
+    if t0:
+        # We need both timings and durations for an eclipse in order to be able to use it
+        for key in ["t_1", "t_2"]:
+            eclipse_offset_time = read_analysis_value(smry, key)
+            t1 = read_analysis_value(smry, f"{key}_1")
+            t4 = read_analysis_value(smry, f"{key}_2")
+            if eclipse_offset_time and t1 and t4:
+                eclipse_times.append(t0 + eclipse_offset_time)
+                eclipse_durations.append((t4 - t1) * duration_scale)
+            elif verbose:
+                print(f"Cannot derive the eclipse timing/duration for {key}:",
+                      f"at least on of {key} values was not found in the analysis summary.")     
+    elif verbose:
+        print(f"Cannot derive any eclipse timings as t0 is not set in the analysis summary.")
 
     if verbose:
         print(f"From {analysis_csv.name}")
-        print(f"Reference time:              {t0:.6f}")
-        print(f"Orbital period:              {period:.6f}")
+        print(f"Reference time:             ", (f"{t0:.6f}" if t0 else ""))
+        print(f"Orbital period:             ", (f"{period:.6f}" if period else ""))
         print( "Eclipse times:              ", ", ".join(f"{t:.6f}" for t in eclipse_times))
         print( "Eclipse durations:          ", ", ".join(f"{t:.6f}" for t in eclipse_durations))
         if duration_scale != 1.:
@@ -133,7 +140,8 @@ def read_analysis_value(summary: pd.DataFrame, nominal_key: str, err_key: str=No
 def flatten_lightcurve(lc: LightCurve,
                        eclipse_times: List[UFloat],
                        eclipse_durations: List[UFloat],
-                       orbital_period: UFloat) \
+                       orbital_period: UFloat,
+                       verbose: bool=True) \
                             -> Tuple[LightCurve, LightCurve, List[bool]]:
     """
     This will produce a flattened copy of the source LightCurve and a further
@@ -149,9 +157,11 @@ def flatten_lightcurve(lc: LightCurve,
     eclipse_mask = lc.create_transit_mask(
         transit_time=[t.nominal_value for t in eclipse_times],
         duration=[t.nominal_value for t in eclipse_durations],
-        period=[orbital_period.nominal_value, orbital_period.nominal_value])
+        period=[orbital_period.nominal_value] * len(eclipse_times))
 
     # Flatten the source lc, except the masked time regions, then find the difference
+    if verbose and not any(eclipse_mask):
+        print("There are no masked eclipses so flatten will apply over the whole lightcurve")
     flat_lc = lc.flatten(mask=eclipse_mask)
     res_lc = lc - flat_lc
 
