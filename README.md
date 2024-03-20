@@ -136,16 +136,18 @@ a `target_filter` list and set `overwrite = True`.
 If a target's STAR SHADOW analysis completes successfully we can use its output to proces
 the lightcurves. The following will process any targets where analysis summaries are found:
 ```sh
-$ python process_results.py
+$ python process_results.py ./tessebs_extra.csv
 ```
-Similar to previous stages, this is controlled by the following parameters:
-```Python
-input_file = Path(".") / "tessebs_extra.csv"
-target_filter = []      # list of index (Star) values to filter the input to
-flux_column = "pdcsap_flux"
-quality_bitmask = "hardest"
-save_plots = False
-```
+This supports the following optional command line arguments:
+- the optional first argument is the input csv file holding the target data. 
+Must have Star and Period columns
+- `-t`/`--targets`: an optional list of target Star value to filter the input csv on
+- `-fc`/`--flux-column`: the flux column to read. Wither sap_flux or pdcsap_flux (default)
+- `-qb`/`--quality-bitmask`: optional quality bitmask with which to filter observations
+See Lightkurve docs for possible string and numeric values. Defaults to 'hardest'
+- `-p`/`--plot`: save plots of the lightcurves. If a directory is also given the plots
+will be saved within this, otherwise they will be saved within ./catalogue/plots
+
 For each target, where an analysis summary is found, the following is carried out:
 1. The analysis summary is parsed for period, eclipse timing and eclipse duration data
 2. For each fits/sector for the target
@@ -156,7 +158,7 @@ For each target, where an analysis summary is found, the following is carried ou
     4. the flattened lightcurve is subtracted from the normalized one to find the residual variability
     5. **TODO**: a variability metric is calculated
     6. optionally, the three lightcurves and the eclipse mask are plotted to a single figure
-        - these are saved to `./catalogue/plots/TIC{tic}/TIC_{tic}_{sector}.png`
+        - these are saved to `{plot_to}/TIC{tic}/TIC_{tic}_{sector}.png`
 
 There is also a convenience jupyter notebook, `process_target_results.ipynb`, which replicates
 this process for a single target except that the plots are rendered interactively. This can be
