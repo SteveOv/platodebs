@@ -4,12 +4,14 @@ points, to set up eclipse masks and subsequently flatten catelogue light-curves.
 """
 from pathlib import Path
 
+import numpy as np
 import matplotlib.pyplot as plt
 import lightkurve as lk
 
 from utility import iterate_targets
 from utility import echo_analysis_log, parse_analysis_for_eclipses
 from utility import flatten_lightcurve, plot_lightcurves_and_mask
+from utility import calculate_variability_metric
 
 # Basic params - may convert to args
 # pylint: disable=invalid-name
@@ -50,23 +52,29 @@ for counter, (target, target_row, count_rows) in enumerate(
         lcs = lk.LightCurveCollection([
             lk.read(f"{f}", flux_column=flux_column, quality_bitmask=quality_bitmask)
                 for f in fits])
-        print(f"Loaded {len(lcs)} light curve fits file(s) for {target}.")
+        print(f"\nLoaded {len(lcs)} light curve fits file(s) for {target}.")
 
+        variabilities = []
         for lc in lcs:
             sector = lc.meta["SECTOR"]
-            print(f"Sector {sector:03d}...", end="")
+            print(f"Processing sector {sector:03d}")
 
             # Process the light curve
-            print("processing the lightcurves...", end="")
             lc = lc.normalize()
             flat_lc, res_lc, ecl_mask = flatten_lightcurve(lc, ecl_times, ecl_durs, period)
+            variability = calculate_variability_metric(res_lc)
+            variabilities.append(variability)
 
             # Plots
             if save_plots:
-                print("saving plots...", end="")
                 title = f"{lc.meta['OBJECT']} sector {sector:03d}"
+                print("Saving plots for", title)
                 fig, _ = plot_lightcurves_and_mask(lc, flat_lc, res_lc, ecl_mask, (8, 6), title)
                 fig.savefig(plots_dir / f"{target}_{sector:03d}.png", dpi=100)
                 plt.close(fig)
 
-            print("done.")
+        # Calculating the variability by sector & taking the mean/stddev appears
+        # more reliable than stitching the res_lcs and calculating the metric directly.
+        # The stitched resids suffer from large discursions absent from the source lcs.
+        print("\nThe overall variability metric =",
+              f"{np.mean(variabilities):.6f}+/-{np.std(variabilities):.6f}")

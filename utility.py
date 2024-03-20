@@ -2,6 +2,7 @@
 from typing import List, Tuple, Union
 from pathlib import Path
 
+from scipy.stats import iqr
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -216,3 +217,21 @@ def plot_lightcurves_and_mask(lc: LightCurve,
             ax.axvspan(t1, t4, color="lightgray", zorder=-10, transform=transform)
 
     return fig, axes
+
+
+def calculate_variability_metric(residual_lc: LightCurve) -> float:
+    """
+    Calculates a metric which summarizes the amount of variability in the
+    passed LightCurve.
+
+    The metric is given by 2 * interquartile_range(flux).
+    The higher the value the greater the variability.
+
+    :residual_lc: the source LightCurve - ideally the residual after removing eclipses
+    :returns: a single floating point metric giving the degree of variability
+    """
+    # We just use the nominal value of the residual flux for now - it gives the indication required.
+    # I've tried this with ufloats on flux and flux_err but the results are inconsistent with
+    # some sectors reporting an order of magnitude lower variability than other similar ones.
+    fluxes = residual_lc.flux.value
+    return iqr(fluxes, nan_policy="omit", interpolation="linear") * 2
