@@ -11,6 +11,7 @@ from matplotlib.axes import Axes
 
 from uncertainties import ufloat, UFloat
 from lightkurve import LightCurve
+from astroquery.vizier import Vizier
 
 def iterate_targets(input_csv: Path,
                     index_col: str="Star",
@@ -98,7 +99,10 @@ def parse_analysis_for_eclipses(analysis_csv: Path,
             t1 = read_analysis_value(smry, f"{key}_1")
             t4 = read_analysis_value(smry, f"{key}_2")
             if eclipse_offset_time and t1 and t4:
-                eclipse_times.append(t0 + eclipse_offset_time)
+                if t0 >= 0.: # t0 <= 0 indicates nothing was calculated
+                    eclipse_times.append(t0 + eclipse_offset_time)
+                else:
+                    eclipse_times.append(eclipse_offset_time)
                 eclipse_durations.append((t4 - t1) * duration_scale)
             elif verbose:
                 print(f"Cannot derive the eclipse timing/duration for {key}:",
@@ -136,6 +140,37 @@ def read_analysis_value(summary: pd.DataFrame, nominal_key: str, err_key: str=No
             err_key = nominal_key + "_err"
         err = abs(summary.loc[err_key]["val"] if err_key in summary.index else 0)
     return ufloat(nom, err) if nom else None
+
+
+def lookup_tess_ebs_ephemeris(target: str, tic: int) -> Tuple[UFloat, UFloat]:
+    """
+    Will query the TESS-ebs catalogue for the ephemeris of the target system.
+
+    :target: the Star name
+    :tic: the numeric TIC of the system
+    :return: a tuple of (t0, period) - these will be None if not found
+    """
+    # The tables and row names seem to get mangled so this is super defensive.
+    table_list = Vizier.query_object(target, catalog="J/ApJS/258/16/tess-ebs")
+    t0 = None
+    period = None
+    if table_list and table_list[0]:
+
+        def get_value(row, key, key_err, default=None):
+            nom = row[key] if key in row.colnames else None
+            err = row[key_err] if key_err in row.colnames else 0
+            if nom:
+                return ufloat(nom, err)
+            else:
+                print(f"Could not find expected field {key} in results of TESS-ebs lookup")
+                return default
+
+        row = table_list[0][0]
+        if row and "TIC" in row.colnames and int(row["TIC"]) == tic:
+            t0 = get_value(row, "_tab1_10", "e_BJD0", None)
+            period = get_value(row, "Per", "e_Per", None)
+
+    return t0, period
 
 
 def flatten_lightcurve(lc: LightCurve,
