@@ -105,8 +105,7 @@ This stage saves a target.json file alongside each target's downloaded fits file
 Subsequent stages may refer to the json file to confirm the target download has been completed.
 You will need to delete the json file or the whole containing folder if you want to force this
 module to re-aquire data for a specific target. Alternatively, use a `--targets` filter and
-the `--overwrite` flag to force the re-acquisition of a subset of the input targets (however
-existing files are not actively deleted so, if not overwritten, may affect subsequent analysis).
+the `--overwrite` flag to force the re-acquisition of a subset of the input targets.
 
 #### Performing the STAR_SHADOW analyses
 To get STAR_SHADOW to analyse any targets with a completed download run:
@@ -119,7 +118,7 @@ This supports the following command line arguments:
 Must have Star and Period columns. Defaults to ./tessebs_extra.csv
 - `-t`/`--targets`: an optional list of target Star values to filter the input csv on
 - `-ps`/`--pool-size`: the maximum number of concurent analyses to run. Defaults to 1
-- `-o`/`--overwrite`: forces (re)analysis of the targets, overwriting any existing results
+- `-o`/`--overwrite`: forces (re-)analysis of the targets, overwriting any existing results
 
 For example:
 ```sh
