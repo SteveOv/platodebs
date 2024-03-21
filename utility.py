@@ -104,12 +104,12 @@ def parse_analysis_for_eclipses(analysis_csv: Path,
                 print(f"Cannot derive the eclipse timing/duration for {key}:",
                       f"at least on of {key} values was not found in the analysis summary.")     
     elif verbose:
-        print(f"Cannot derive any eclipse timings as t0 is not set in the analysis summary.")
+        print( "Cannot derive any eclipse timings as t0 is not set in the analysis summary.")
 
     if verbose:
         print(f"From {analysis_csv.name}")
-        print(f"Reference time:             ", (f"{t0:.6f}" if t0 else ""))
-        print(f"Orbital period:             ", (f"{period:.6f}" if period else ""))
+        print( "Reference time:             ", (f"{t0:.6f}" if t0 else ""))
+        print( "Orbital period:             ", (f"{period:.6f}" if period else ""))
         print( "Eclipse times:              ", ", ".join(f"{t:.6f}" for t in eclipse_times))
         print( "Eclipse durations:          ", ", ".join(f"{t:.6f}" for t in eclipse_durations))
         if duration_scale != 1.:
