@@ -19,17 +19,18 @@ DESCRIPTION = "Calculates the variability metrics for the target systems in the 
 ap = argparse.ArgumentParser(description=DESCRIPTION)
 ap.add_argument(dest="input_file", type=Path, nargs="?",
                 help="The input file to read the targets from. Defaults to ./tessebs_extra.csv")
-ap.add_argument("-t", "--targets", dest="target_filter", type=str, nargs="+", required=False,
-                help="Optional list of targets, from those in the input file, to restrict to")
+ap.add_argument("-t", "--targets", dest="targets",
+                type=str, nargs="+", metavar="STAR", required=False,
+                help="Optional list of targets, within the input file, to restrict processing to")
 ap.add_argument("-fc", "--flux-column", dest="flux_column", type=str, required=False,
                 choices=["sap_flux", "pdcsap_flux"], help="The flux_column to use [pdcsap_flux]")
 ap.add_argument("-qb", "--quality-bitmask", dest="quality_bitmask", type=str, required=False,
                 help="An optional quality bitmask to apply to the lightcurves. Defaults to hardest")
 ap.add_argument("-p", "--plot", dest="plot_to", type=Path, required=False,
-                nargs="?", const=Path(".") / "catalogue" / "plots",
+                nargs="?", const=Path(".") / "catalogue" / "plots", metavar="PATH",
                 help="Save plots for each target sector and optionally where to save them")
 ap.set_defaults(input_file=Path(".") / "tessebs_extra.csv",
-                target_filter=[],
+                targets=[],
                 flux_column="pdcsap_flux",
                 quality_bitmask="default",
                 plot_to=None)
@@ -43,7 +44,7 @@ analysis_dir.mkdir(parents=True, exist_ok=True)
 
 print(f"Reading targets from {args.input_file}")
 for counter, (target, target_row, count_rows) in enumerate(
-        iterate_targets(args.input_file, index_filter=args.target_filter),
+        iterate_targets(args.input_file, index_filter=args.targets),
         start=1):
     tic = target_row["TIC"]
     print("---------------------------------------------")

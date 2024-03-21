@@ -3,6 +3,7 @@ Perform STAR SHADOW analysis on previously downloaded TESS timeseries fits files
 (using catalogue_download_fits.py) for the targets in tessebs_extra.csv
 """
 from pathlib import Path
+import argparse
 import math
 from multiprocessing import Pool
 
@@ -99,24 +100,36 @@ def analyse_target(counter: int,
 # Analysis master processing starts here
 # -------------------------------------------
 if __name__ == "__main__":
-    # Basic params - may convert to args
-    # pylint: disable=invalid-name
-    input_file = Path(".") / "tessebs_extra.csv"
-    target_filter = []      # list of index (Star) values to filter the input to
-    overwrite = False
-    pool_size = 4
+
+    # Handle the command line args
+    DESCRIPTION = "Analyses previously downloaded TESS lightcurves with STAR SHADOW."
+    ap = argparse.ArgumentParser(description=DESCRIPTION)
+    ap.add_argument(dest="input_file", type=Path, nargs="?",
+                    help="The input file to read the targets from. Defaults to ./tessebs_extra.csv")
+    ap.add_argument("-t", "--targets", dest="targets",
+                type=str, nargs="+", metavar="STAR", required=False,
+                help="Optional list of targets, within the input file, to restrict processing to")
+    ap.add_argument("-o", "--overwrite", dest="overwrite", required=False, action="store_true",
+                    help="force re-analysis, overwriting any previous results")
+    ap.add_argument("-ps", "--pool-size", dest="pool_size", type=int, required=False,
+                    help="The maximum number of concurrent analyses to run [1]")
+    ap.set_defaults(input_file=Path(".") / "tessebs_extra.csv",
+                    targets=[],
+                    overwrite=False,
+                    pool_size=1)
+    args = ap.parse_args()
 
     # For the analyse_target calls, starmap requires an iterator over the sorted params
     # in the form [(1, targ1, row1, total, ow), (2, targ2, row2, total, ow), ...]
     iter_prms = (
-        (i, targ, row, tot, overwrite) for i, (targ, row, tot) in enumerate(
-            iterate_targets(input_file, index_filter=target_filter),
+        (i, targ, row, tot, args.overwrite) for i, (targ, row, tot) in enumerate(
+            iterate_targets(args.input_file, index_filter=args.targets),
             start=1)
     )
 
-    if pool_size <= 1: # We could use a pool of 1 but let's keep execution on the interactive proc
+    if args.pool_size <= 1: # We could use a pool of 1, but keep execution on the interactive proc
         for prms in iter_prms:
             analyse_target(*prms)
     else:
-        with Pool(pool_size) as pool:
+        with Pool(args.pool_size) as pool:
             pool.starmap(analyse_target, iter_prms, chunksize=1)
