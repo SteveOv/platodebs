@@ -10,7 +10,7 @@ from multiprocessing import Pool
 from astropy.io import fits
 import star_shadow as sts
 
-from utility import iterate_targets
+from utility import iterate_targets, echo_analysis_log, parse_analysis_for_eclipses
 
 
 def fits_criteria(hdul):
@@ -28,7 +28,7 @@ def fits_criteria(hdul):
 def analyse_target(counter: int,
                    target: str,
                    target_row: dict,
-                   total_rows: int,
+                   count_rows: int,
                    overwrite_analysis: bool=False) -> None:
     """
     Performs full STAR_SHADOW analysis on a single target system.
@@ -41,29 +41,29 @@ def analyse_target(counter: int,
     """
     tic = target_row["TIC"]
     period = target_row["Period"]
-    print()
-    print("---------------------------------------------")
-    print(f"Processing target {counter}/{total_rows}: {target}")
-    print("---------------------------------------------")
+    print(f"""
+---------------------------------------------
+Processing target {counter}/{count_rows}: {target}
+---------------------------------------------""")
     print(f"{target}: Input catalogue gives the period as {period} d.")
 
+    # Directories based on the tic without leading zeros to match STAR SHADOW's naming
     catalogue_dir = Path(".") / "catalogue"
     analysis_dir = catalogue_dir / "analysis"
     analysis_dir.mkdir(parents=True, exist_ok=True)
-    target_dir = catalogue_dir / f"download/{tic:010d}/"
+    download_dir = catalogue_dir / f"download/{tic}/"
 
-    # Use the existance of the output/analysis*/*_analysis_summary.csv as a lock
+    # Use the existance of the {tic}_analysis/{tic}_analysis_summary.csv as a lock
     # Note: STAR_SHADOW uses the numeric TIC without leading zeros in dir/file names.
     analysis_csv = analysis_dir / f"{tic}_analysis" / f"{tic}_analysis_summary.csv"
     if not overwrite_analysis and analysis_csv.exists():
         # sts won't restart a completed analysis unless overwrite=True so this
         # check isn't entirely necessary but it does make the console log clearer.
-        print(f"{target}: Found analysis summary csv '{analysis_csv}'. Skipping to next target.")
+        print(f"{target}: A completed analysis exists.",
+               "The overwrite flag isn't set so will not re-analyse.")
     else:
-        print(f"{target}: No analysis summary csv found so proceeding with analysis.")
-
-        # All the fits previous downloaded for this target
-        fits_files = sorted(f"{f}" for f in target_dir.glob("**/*.fits"))
+        # All the fits previously downloaded for this target
+        fits_files = sorted(f"{f}" for f in download_dir.glob("**/*.fits"))
         print(f"{target}: Found {len(fits_files)} downloaded fits file(s) for this target.")
 
         # As an optimization avoid using all (potentially 30+) fits for the analysis.
@@ -82,7 +82,9 @@ def analyse_target(counter: int,
 
         # With overwrite=False this appears to be able to resume from last
         # completed stage. Set overwrite=True to restart the analysis anyway.
-        print(f"{target}: Will use sector(s) {sectors} for STAR_SHADOW analysis.\n")
+        print(f"{target}: Will use sector(s)",
+              ", ".join(f"{s}" for s in sectors),
+              f"(selected from {len(fits_files)} fits file(s)) for STAR_SHADOW analysis.\n")
         sts.analyse_lc_from_tic(tic,
                                 fits_files,
                                 p_orb=period,
@@ -93,8 +95,9 @@ def analyse_target(counter: int,
                                 overwrite=overwrite_analysis,
                                 verbose=True)
 
-    # TODO: a summary of the eclipse data, from analysis log & csv, or a failure message
-
+    # Echo the log and selected eclipse parameters to the console.
+    echo_analysis_log(analysis_csv.parent / f"{tic}.log")
+    parse_analysis_for_eclipses(analysis_csv, verbose=True)
 
 # -------------------------------------------
 # Analysis master processing starts here
@@ -121,6 +124,7 @@ if __name__ == "__main__":
 
     # For the analyse_target calls, starmap requires an iterator over the sorted params
     # in the form [(1, targ1, row1, total, ow), (2, targ2, row2, total, ow), ...]
+    print(f"Reading targets from {args.input_file}")
     iter_prms = (
         (i, targ, row, tot, args.overwrite) for i, (targ, row, tot) in enumerate(
             iterate_targets(args.input_file, index_filter=args.targets),

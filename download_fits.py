@@ -10,8 +10,7 @@ import lightkurve as lk
 from utility import iterate_targets
 
 # Handle the command line args
-DESCRIPTION = "Downloads TESS lightcurve fits files for selected targets."
-ap = argparse.ArgumentParser(description=DESCRIPTION)
+ap = argparse.ArgumentParser(description="Downloads lightcurve fits files for selected targets.")
 ap.add_argument(dest="input_file", type=Path, nargs="?",
                 help="The input file to read the targets from. Defaults to ./tessebs_extra.csv")
 ap.add_argument("-t", "--targets", dest="targets",
@@ -39,43 +38,49 @@ catalogue_dir = Path(".") / "catalogue"
 catalogue_dir.mkdir(parents=True, exist_ok=True)
 empty_targets = []
 
-for counter, (target, target_row, total_rows) in enumerate(
+print(f"Reading targets from {args.input_file}")
+for counter, (target, target_row, count_rows) in enumerate(
         iterate_targets(args.input_file, index_filter=args.targets, nan_to_none=True),
         start=1):
     tic = target_row["TIC"]
-    print()
-    print("---------------------------------------------")
-    print(f"Processing target ({counter}/{total_rows}): {target}")
-    print("---------------------------------------------")
+    print(f"""
+---------------------------------------------
+Processing target {counter}/{count_rows}: {target}
+---------------------------------------------""")
 
-    download_dir = catalogue_dir / f"download/{tic:010d}/"
+    # Directory based on the tic without leading zeros to match STAR SHADOW's naming
+    download_dir = catalogue_dir / f"download/{tic}/"
     target_json = download_dir / "target.json"
     if not args.overwrite and target_json.exists():
-        print("A download for this target already exists. Skipping.")
+        print("Assets have previously been downloaded and the overwrite flag is not set. Skipping.")
     else:
-        print(f"Searching for TESS target: {target}")
+        if download_dir.exists():
+            # Remove any existing json | downloads so nothing left to coalesce with the new fits set
+            print("Clearing out any previously downloaded assets")
+            for path in (p for p in download_dir.glob("**/*") if p.is_file()):
+                path.unlink()
+
+        print(f"Searching for {args.mission}/{args.author}/{args.exptime} target:", target)
         results = lk.search_lightcurve(target,
                                        mission=args.mission,
                                        author=args.author,
                                        exptime=args.exptime)
 
-        print(f"The following results have been found for {target}:", results)
+        print("The search yielded a", results)
         if results:
-            lcs = results.download_all(download_dir=f"{download_dir}")
-            if len(lcs):
-                print(f"Downloaded {len(lcs)} LCs")
-            else:
-                print("Nothing downloaded")
+            # quality_bitmask=0 supresses messages about excluded cadences; not relevent here
+            lcs = results.download_all(download_dir=f"{download_dir}", quality_bitmask=0)
+            print(f"Downloaded {len(lcs)} asset(s)")
+            if len(lcs) == 0:
                 empty_targets.append(target)
 
-            # Write out the supplied input metadata for this target
-            # so we can refer to it when processing the assets.
-            # This also acts as "lock" indicating we've downloaded this one
+            # Write out the supplied target input metadata so we can refer to it when processing
+            # the assets. This also acts as "lock" indicating we've downloaded this one.
             with open(target_json, mode="w", encoding="utf8") as fp:
                 json.dump({ "Star": target, **target_row }, fp, ensure_ascii=False, indent=2)
         else:
-            print(f"No assets found for target: {target}")
+            print("No assets found for target:", target)
             empty_targets.append(target)
 
 if empty_targets:
-    print(f"No assets found for the following targets; {empty_targets}")
+    print("No assets found for the target(s):", ", ".join(empty_targets))

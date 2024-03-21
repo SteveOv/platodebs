@@ -47,9 +47,10 @@ for counter, (target, target_row, count_rows) in enumerate(
         iterate_targets(args.input_file, index_filter=args.targets),
         start=1):
     tic = target_row["TIC"]
-    print("---------------------------------------------")
-    print(f"Processing target ({counter}/{count_rows}): {target}")
-    print("---------------------------------------------")
+    print(f"""
+---------------------------------------------
+Processing target {counter}/{count_rows}: {target}
+---------------------------------------------""")
 
     # Use the existance of the output/analysis*/*_analysis_summary.csv as a lock
     analysis_csv = analysis_dir / f"{tic}_analysis" / f"{tic}_analysis_summary.csv"
@@ -59,30 +60,31 @@ for counter, (target, target_row, count_rows) in enumerate(
         echo_analysis_log(analysis_csv.parent / f"{tic}.log")
         (t0, period, ecl_times, ecl_durs) = parse_analysis_for_eclipses(analysis_csv)
 
-        # Now we can process each LC for this target
-        target_dir = catalogue_dir / f"download/{tic:010d}/"
-        target_json = target_dir / "target.json"
+        # Directories based on the tic without leading zeros to match STAR SHADOW's naming
+        download_dir = catalogue_dir / f"download/{tic}/"
+        target_json = download_dir / "target.json"
 
-        fits = sorted(target_dir.rglob("**/*.fits"))
+        fits = sorted(download_dir.rglob("**/*.fits"))
         lcs = lk.LightCurveCollection([
             lk.read(f"{f}", flux_column=args.flux_column, quality_bitmask=args.quality_bitmask)
                 for f in fits])
-        print(f"\nLoaded {len(lcs)} light curve fits file(s) for {target}.")
+        print(f"\nLoaded {len(lcs)} light curve fits file(s) for", target)
 
         variabilities = []
         for lc in lcs:
             sector = lc.meta["SECTOR"]
-            print(f"Processing sector {sector:03d}")
 
             # Process the light curve
             lc = lc.normalize()
             flat_lc, res_lc, ecl_mask = flatten_lightcurve(lc, ecl_times, ecl_durs, period)
             variability = calculate_variability_metric(res_lc)
             variabilities.append(variability)
+            print(f"Processed sector {sector:03d} {args.flux_column}",
+                  f"and calculated its variability metric to be {variability:.6f}")
 
             # Plots
             if args.plot_to:
-                plot_file = args.plot_to / f"{target}" / f"{target}_{sector:03d}.png"
+                plot_file = args.plot_to / f"{tic}/{target}_{sector:03d}.png"
                 plot_file.parent.mkdir(parents=True, exist_ok=True)
                 title = f"{lc.meta['OBJECT']} sector {sector:03d} (variability = {variability:.6f})"
                 fig, _ = plot_lightcurves_and_mask(lc, flat_lc, res_lc, ecl_mask, (8, 6), title)
