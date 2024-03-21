@@ -77,7 +77,7 @@ The stages and STAR SHADOW each save milestone information as they progress and 
 the last milestone if a restart is required. 
 
 
-#### Downloading target fits from MAST
+#### Downloading target fits files from MAST
 The first stage is to download the target fits files from MAST with:
 ```sh
 $ python download_fits.py
@@ -108,7 +108,7 @@ module to re-aquire data for a specific target. Alternatively, use a `--targets`
 the `--overwrite` flag to force the re-acquisition of a subset of the input targets (however
 existing files are not actively deleted so, if not overwritten, may affect subsequent analysis).
 
-#### Performing the STAR_SHADOW analysis
+#### Performing the STAR_SHADOW analyses
 To get STAR_SHADOW to analyse any targets with a completed download run:
 ```sh
 $ python perform_analysis.py
@@ -139,8 +139,8 @@ time taken to complete this step;
 This module does not directly save its own milestones, however STAR SHADOW does and these
 are used to handle failure and resumption. STAR SHADOW writes the milestones, log and analysis
 output to a `./catalogue/analysis/{tic}_analysis/` directory for each target. The final output
-of the analysis for a target, `{tic}_analysis_summary.csv`, contains a list of the system
-characteristics resulting from the analysis and will be used by the subsequent stage.
+of the analysis for a target, `{tic}_analysis_summary.csv`, contains a list of the resulting
+system characteristics will be used by the subsequent stage.
 
 Again, to re-run analyses either delete the corresponding analysis directories or use
 a `--targets` filter list and the `--overwrite` flag.
@@ -157,13 +157,13 @@ This supports the following optional command line arguments:
 - the optional first argument is the input csv file holding the target data. 
 Must have Star and Period columns. Defaults to ./tessebs_extra.csv
 - `-t`/`--targets`: an optional list of target Star values to filter the input csv on
-- `-fc`/`--flux-column`: the flux column to read. Wither sap_flux or pdcsap_flux (default)
-- `-qb`/`--quality-bitmask`: optional bitmask filter to apply over the fluxes' Quality flag.
+- `-fc`/`--flux-column`: the flux column to read. Either sap_flux or pdcsap_flux (default)
+- `-qb`/`--quality-bitmask`: optional bitmask filter to apply over the fluxes' Quality flags.
 Defaults to default
     - See [Lightkurve: read()](http://docs.lightkurve.org/reference/api/lightkurve.io.read.html)
 for possible string and numeric values
 - `-p`/`--plot`: save plots of the lightcurves. If a directory is also given the plots
-will be saved within this, otherwise they will be saved within ./catalogue/plots
+will be saved hierarchically within it, otherwise ./catalogue/plots will be used
 
 For example:
 ```sh
@@ -181,7 +181,7 @@ For each target, where an analysis summary is found, the following is carried ou
     5. a variability metric is calculated
         - this is based on doubling the interquartile range of the residual variability
     6. optionally, the three lightcurves and the eclipse mask are plotted to a single figure
-        - these are saved to `{plot_to}/TIC{tic}/TIC_{tic}_{sector}.png`
+        - these are saved to `{--plot}/TIC{tic}/TIC_{tic}_{sector}.png`
 3. An overall variability metric is given: the mean and 1-sigma of the values across all sectors
 
 There is also a convenience jupyter notebook, `process_target_results.ipynb`, which replicates
