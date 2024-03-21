@@ -31,7 +31,7 @@ ap.add_argument("-p", "--plot", dest="plot_to", type=Path, required=False,
 ap.set_defaults(input_file=Path(".") / "tessebs_extra.csv",
                 target_filter=[],
                 flux_column="pdcsap_flux",
-                quality_bitmask="hardest",
+                quality_bitmask="default",
                 plot_to=None)
 args = ap.parse_args()
 if args.quality_bitmask.isdecimal(): # support numeric quality_bitmask values too

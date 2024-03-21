@@ -144,7 +144,8 @@ Must have Star and Period columns. Defaults to ./tessebs_extra.csv
 - `-t`/`--targets`: an optional list of target Star value to filter the input csv on
 - `-fc`/`--flux-column`: the flux column to read. Wither sap_flux or pdcsap_flux (default)
 - `-qb`/`--quality-bitmask`: optional quality bitmask with which to filter observations
-See Lightkurve docs for possible string and numeric values. Defaults to 'hardest'
+    - See [Lightkurve: read()](http://docs.lightkurve.org/reference/api/lightkurve.io.read.html)
+for possible string and numeric values. Defaults to 'default'
 - `-p`/`--plot`: save plots of the lightcurves. If a directory is also given the plots
 will be saved within this, otherwise they will be saved within ./catalogue/plots
 
