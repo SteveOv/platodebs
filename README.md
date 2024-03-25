@@ -9,7 +9,7 @@ binary systems (dEBs) within _TESS_ lightcurves.
 
 This code base was developed on Kubuntu 23.10 within the context of
 an [Anaconda 3](https://www.anaconda.com/) conda environment named **platodebs**. 
-This environment is configured to support _Python 3.7_, 
+This environment is configured to support _Python 3.8_, 
 the [STAR SHADOW](https://github.com/LucIJspeert/star_shadow) lightcurve analysis
 tool and any libraries upon which the code is dependent.
 
