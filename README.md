@@ -119,6 +119,8 @@ Must have Star and Period columns. Defaults to ./tessebs_extra.csv
 - `-t`/`--targets`: an optional list of target Star values to filter the input csv on
 - `-ps`/`--pool-size`: the maximum number of concurent analyses to run. Defaults to 1
 - `-o`/`--overwrite`: forces (re-)analysis of the targets, overwriting any existing results
+- `-s`/`--simulate`: report on the action to be taken without performing STAR SHADOW analysis.
+Useful for checking which targets are outstanding and/or which sectors will be used
 
 For example:
 ```sh

@@ -22,14 +22,15 @@ def fits_criteria(hdul):
     pdc_noi = hdul[1].header["PDC_NOI"] # PDC Noise goodness metric for target
 
     # Basic metric is based on PDC_TOT but we penalize high PDC_NOI (>.99)
-    # as (based on inspection) these usually have noise swamping any signal.
+    # as (based on inspection) these often have noise swamping any signal.
     return pdc_tot / (1 if pdc_noi <= 0.99 else 100)
 
 def analyse_target(counter: int,
                    target: str,
                    target_row: dict,
                    count_rows: int,
-                   overwrite_analysis: bool=False) -> None:
+                   overwrite_analysis: bool=False,
+                   simulate: bool=False) -> None:
     """
     Performs full STAR_SHADOW analysis on a single target system.
 
@@ -38,6 +39,7 @@ def analyse_target(counter: int,
     :target_row: the input data associated with the target
     :total_rows: total number of targets being processed (for messages)
     :overwrite_analysis: whether to force the analysis to overwrite previous results
+    :simulate: report on the actions to be taken; do everything except STAR SHADOW analysis
     """
     tic = target_row["TIC"]
     period = target_row["Period"]
@@ -78,26 +80,29 @@ Processing target {counter}/{count_rows}: {target}
 
         # Finally get things back into sector order for processing by STAR_SHADOW
         hduls = sorted(hduls, key=lambda hdul: hdul[0].header["SECTOR"])
-        fits_files, sectors = zip(*[(h.filename(), h[0].header["SECTOR"]) for h in hduls])
+        use_fits, use_sectors = zip(*[(h.filename(), h[0].header["SECTOR"]) for h in hduls])
 
         # With overwrite=False this appears to be able to resume from last
         # completed stage. Set overwrite=True to restart the analysis anyway.
-        print(f"{target}: Will use sector(s)",
-              ", ".join(f"{s}" for s in sectors),
-              f"(selected from {len(fits_files)} fits file(s)) for STAR_SHADOW analysis.\n")
-        sts.analyse_lc_from_tic(tic,
-                                fits_files,
-                                p_orb=period,
-                                stage='all',
-                                method='fitter',
-                                data_id=target,
-                                save_dir=f"{analysis_dir}",
-                                overwrite=overwrite_analysis,
-                                verbose=True)
+        print(f"{target}: {'Simulating the use of' if simulate else 'Using'} sector(s)",
+            ", ".join(f"{s}" for s in use_sectors),
+            f"({len(use_fits)} of {len(fits_files)} fits files) for STAR_SHADOW analysis",
+            f"with overwrite {'en' if overwrite_analysis else 'dis'}abled.\n")
+        if not simulate:
+            sts.analyse_lc_from_tic(tic,
+                                    use_fits,
+                                    p_orb=period,
+                                    stage='all',
+                                    method='fitter',
+                                    data_id=target,
+                                    save_dir=f"{analysis_dir}",
+                                    overwrite=overwrite_analysis,
+                                    verbose=True)
 
-    # Echo the log and selected eclipse parameters to the console.
-    echo_analysis_log(analysis_csv.parent / f"{tic}.log")
-    parse_analysis_for_eclipses(analysis_csv, verbose=True)
+    if not simulate:
+        # Echo the log and selected eclipse parameters to the console.
+        echo_analysis_log(analysis_csv.parent / f"{tic}.log")
+        parse_analysis_for_eclipses(analysis_csv, verbose=True)
 
 # -------------------------------------------
 # Analysis master processing starts here
@@ -116,17 +121,20 @@ if __name__ == "__main__":
                     help="force re-analysis, overwriting any previous results")
     ap.add_argument("-ps", "--pool-size", dest="pool_size", type=int, required=False,
                     help="The maximum number of concurrent analyses to run [1]")
+    ap.add_argument("-simulate", "--simulate", dest="simulate", required=False, action="store_true",
+                    help="Report on what actions will be carried out without performing them")
     ap.set_defaults(input_file=Path(".") / "tessebs_extra.csv",
                     targets=[],
                     overwrite=False,
-                    pool_size=1)
+                    pool_size=1,
+                    simulate=False)
     args = ap.parse_args()
 
     # For the analyse_target calls, starmap requires an iterator over the sorted params
     # in the form [(1, targ1, row1, total, ow), (2, targ2, row2, total, ow), ...]
     print(f"Reading targets from {args.input_file}")
     iter_prms = (
-        (i, targ, row, tot, args.overwrite) for i, (targ, row, tot) in enumerate(
+        (i, targ, row, tot, args.overwrite, args.simulate) for i, (targ, row, tot) in enumerate(
             iterate_targets(args.input_file, index_filter=args.targets),
             start=1)
     )
