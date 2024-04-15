@@ -268,5 +268,5 @@ def calculate_variability_metric(residual_lc: LightCurve) -> float:
     # We just use the nominal value of the residual flux for now - it gives the indication required.
     # I've tried this with ufloats on flux and flux_err but the results are inconsistent with
     # some sectors reporting an order of magnitude lower variability than other similar ones.
-    fluxes = residual_lc.flux.value
+    fluxes = residual_lc.flux.value.tolist()
     return iqr(fluxes, nan_policy="omit", interpolation="linear") * 2

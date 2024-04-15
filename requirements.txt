@@ -1,0 +1,17 @@
+numpy
+scipy
+numba
+h5py
+astropy
+matplotlib
+arviz
+corner
+
+lightkurve
+
+# For jupyter notebook support
+ipykernel
+ipympl
+jupyter
+
+git+https://github.com/LucIJspeert/star_shadow@1.1.7b

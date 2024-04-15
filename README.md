@@ -9,7 +9,7 @@ binary systems (dEBs) within _TESS_ lightcurves.
 
 This code base was developed on Kubuntu 23.10 within the context of
 an [Anaconda 3](https://www.anaconda.com/) conda environment named **platodebs**. 
-This environment is configured to support _Python 3.8_, 
+This environment is configured to support _Python >=3.7_, 
 the [STAR SHADOW](https://github.com/LucIJspeert/star_shadow) lightcurve analysis
 tool and any libraries upon which the code is dependent.
 
@@ -26,33 +26,14 @@ $ conda activate platodebs
 #### Alternative: using a venv
 
 If you prefer not to use a conda environment the following venv setup works
-although I haven't tested it as thoroughly and it doesn't have as tight control
-over versioning. Again, from this directory run;
+although I haven't tested it as thoroughly. Again, from this directory run;
 ```sh
 $ python -m venv .platodebs
 ```
 ```sh
 $ source .platodebs/bin/activate
 ```
-You can then use pip to install the following list of packages;
-```
-numpy
-scipy
-numba
-h5py
-astropy
-matplotlib
-arviz
-corner
-
-lightkurve
-ipykernel
-ipympl
-jupyter
-
-git+https://github.com/LucIJspeert/star_shadow@1.1.7b
-```
-or create a requirements.txt file, copy the list into it and then run;
+Then to set up the required packages in the environment run:
 ```sh
 $ pip install -r requirements.txt
 ```
