@@ -8,6 +8,7 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 import lightkurve as lk
+from uncertainties import nominal_value
 
 from utility import iterate_targets
 from utility import echo_analysis_log, parse_analysis_for_eclipses, lookup_tess_ebs_ephemeris
@@ -59,7 +60,7 @@ Processing target {counter}/{count_rows}: {target}
     else:
         echo_analysis_log(analysis_csv.parent / f"{tic}.log")
         (t0, period, ecl_times, ecl_durs, _) = parse_analysis_for_eclipses(analysis_csv)
-        if t0 is None or t0 <= 0.:
+        if t0 is None or nominal_value(t0) <= 0.:
             t0, _ = lookup_tess_ebs_ephemeris(target, tic)
             if t0 and t0 > 0.:
                 print(f"Analysis didn't find a reference time so using {t0:.6f} from TESS-ebs.")
