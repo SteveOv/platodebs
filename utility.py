@@ -1,6 +1,7 @@
 """ Helper functions for the platodebs project. """
 from typing import List, Tuple, Union
 from pathlib import Path
+import warnings
 
 from scipy.stats import iqr
 import numpy as np
@@ -9,7 +10,9 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
 
-from uncertainties import ufloat, UFloat
+# pylint: disable=line-too-long, wrong-import-position
+warnings.filterwarnings("ignore", "Using UFloat objects with std_dev==0 may give unexpected results.", category=UserWarning)
+from uncertainties import ufloat, UFloat, nominal_value
 from lightkurve import LightCurve
 from astroquery.vizier import Vizier
 
@@ -71,7 +74,7 @@ def echo_analysis_log(analysis_log: Path) -> None:
 def parse_analysis_for_eclipses(analysis_csv: Path,
                                 duration_scale: float=1.,
                                 verbose: bool=True) \
-        -> Union[Tuple[UFloat, UFloat, List[UFloat], List[UFloat]], None]:
+        -> Union[Tuple[UFloat, UFloat, List[UFloat], List[UFloat], List[UFloat]], None]:
     """
     Will parse a STAR_SHADOW analysis_summary csv file for the eclipse results.
 
@@ -91,22 +94,25 @@ def parse_analysis_for_eclipses(analysis_csv: Path,
     period = read_analysis_value(smry, "period", "p_err")
     eclipse_times = []
     eclipse_durations = []
+    eclipse_depths = []
 
-    if t0:
+    if t0 is not None:
         # We need both timings and durations for an eclipse in order to be able to use it
         for key in ["t_1", "t_2"]:
             eclipse_offset_time = read_analysis_value(smry, key)
             t1 = read_analysis_value(smry, f"{key}_1")
             t4 = read_analysis_value(smry, f"{key}_2")
             if eclipse_offset_time and t1 and t4:
-                if t0 >= 0.: # t0 <= 0 indicates nothing was calculated
+                if nominal_value(t0) > 0.: # t0 <= 0 indicates nothing was calculated
                     eclipse_times.append(t0 + eclipse_offset_time)
                 else:
                     eclipse_times.append(eclipse_offset_time)
                 eclipse_durations.append((t4 - t1) * duration_scale)
             elif verbose:
                 print(f"Cannot derive the eclipse timing/duration for {key}:",
-                      f"at least on of {key} values was not found in the analysis summary.")     
+                      f"at least on of {key} values was not found in the analysis summary.")
+        if len(eclipse_durations) > 0:
+            eclipse_depths = [read_analysis_value(smry, f"depth_{i}", f"d_{i}_err") for i in [1, 2]]
     elif verbose:
         print( "Cannot derive any eclipse timings as t0 is not set in the analysis summary.")
 
@@ -116,12 +122,13 @@ def parse_analysis_for_eclipses(analysis_csv: Path,
         print( "Orbital period:             ", (f"{period:.6f}" if period else ""))
         print( "Eclipse times:              ", ", ".join(f"{t:.6f}" for t in eclipse_times))
         print( "Eclipse durations:          ", ", ".join(f"{t:.6f}" for t in eclipse_durations))
+        print( "Eclipse depths:             ", ", ".join(f"{t:.6f}" for t in eclipse_depths))
         if duration_scale != 1.:
             print(f"Eclipse durations scaled by: {duration_scale}")
         if any(t.nominal_value == 0 for t in eclipse_durations):
             print("At least one eclipse duration is zero. Were eclipses found?")
 
-    return t0, period, eclipse_times, eclipse_durations
+    return t0, period, eclipse_times, eclipse_durations, eclipse_depths
 
 
 def read_analysis_value(summary: pd.DataFrame, nominal_key: str, err_key: str=None) \

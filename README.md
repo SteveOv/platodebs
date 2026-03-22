@@ -5,16 +5,33 @@
 A simple set code for investigating the variability of detached eclipsing
 binary systems (dEBs) within _TESS_ lightcurves.
 
-## Installation
+## Setup of the runtime environment
 
-This code base was developed on Kubuntu 23.10 within the context of
-an [Anaconda 3](https://www.anaconda.com/) conda environment named **platodebs**. 
-This environment is configured to support _Python >=3.7_, 
+This code base was developed within the context of a Python 3 virtual
+environment which is configured to support _Python >=3.7_, 
 the [STAR SHADOW](https://github.com/LucIJspeert/star_shadow) lightcurve analysis
 tool and any libraries upon which the code is dependent.
 
-To set up the **platodebs** conda environment, having first cloned this GitHub repo, 
-open a Terminal, navigate to _this_ local directory and run the following command;
+Having first cloned this GitHub repo, open a Terminal, navigate to the root of the
+local directory and run the following commands. These create and activate the 
+`.platedebs` virtual environment;
+
+```sh
+$ python -m venv .platodebs
+$ source .platodebs/bin/activate
+```
+Then to set up the required packages in the environment run:
+```sh
+$ pip install -r requirements.txt
+```
+You may need to install the jupyter kernel in the new venv:
+```sh
+$ ipython kernel install --user --name=.platodebs
+```
+
+#### Alternative, conda virtual environment
+To set up an equivalent **platodebs** conda environment, run the following command
+at the root of the local repo directory;
 ```sh
 $ conda env create -f environment.yaml
 ```
@@ -22,20 +39,6 @@ You will need to activate the **platodebs** environment whenever you wish to
 run any of these modules. Use the following command;
 ```sh
 $ conda activate platodebs
-```
-#### Alternative: using a venv
-
-If you prefer not to use a conda environment the following venv setup works
-although I haven't tested it as thoroughly. Again, from this directory run;
-```sh
-$ python -m venv .platodebs
-```
-```sh
-$ source .platodebs/bin/activate
-```
-Then to set up the required packages in the environment run:
-```sh
-$ pip install -r requirements.txt
 ```
 
 #### First run to test the environment and JIT STAR SHADOW

@@ -58,7 +58,7 @@ Processing target {counter}/{count_rows}: {target}
         print(f"Did not find '{analysis_csv}'. Unable to process {target}. Skipping.")
     else:
         echo_analysis_log(analysis_csv.parent / f"{tic}.log")
-        (t0, period, ecl_times, ecl_durs) = parse_analysis_for_eclipses(analysis_csv)
+        (t0, period, ecl_times, ecl_durs, _) = parse_analysis_for_eclipses(analysis_csv)
         if t0 is None or t0 <= 0.:
             t0, _ = lookup_tess_ebs_ephemeris(target, tic)
             if t0 and t0 > 0.:
